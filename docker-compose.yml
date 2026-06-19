@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agendou_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - agendou_network
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: agendou_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agendou
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cheguei123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - agendou_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: agendou_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - agendou_network
+    depends_on:
+      - app
+
+networks:
+  agendou_network:
+    driver: bridge
+
+volumes:
+  pgdata:
